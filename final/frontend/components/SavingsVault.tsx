@@ -3,6 +3,11 @@
 import { useState } from 'react'
 import { addToSavings, withdrawFromSavings } from '@/lib/api'
 import { formatCurrency } from '@/lib/currency'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { PiggyBank, Lock, Unlock, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface SavingsVaultProps {
   username: string
@@ -21,15 +26,14 @@ export default function SavingsVault({ username, savingsVault, currency, balance
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!amount || parseFloat(amount) <= 0) return
-    
+
     const amountValue = parseFloat(amount)
-    
-    // Check if user has enough balance to add to vault
+
     if (mode === 'add' && balance < amountValue) {
       alert('Insufficient balance! You cannot save more than your current balance.')
       return
     }
-    
+
     setLoading(true)
     try {
       if (mode === 'add') {
@@ -39,8 +43,9 @@ export default function SavingsVault({ username, savingsVault, currency, balance
       }
       setAmount('')
       onUpdate()
-      alert(`Successfully ${mode === 'add' ? 'added to' : 'withdrawn from'} savings vault!`)
+      // Optional: Add toast here
     } catch (error: any) {
+      console.error(error)
       alert(error.message)
     } finally {
       setLoading(false)
@@ -48,127 +53,122 @@ export default function SavingsVault({ username, savingsVault, currency, balance
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+    <Card className="overflow-hidden border-none bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-2xl shadow-indigo-500/20">
       <div className="p-6">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+              <PiggyBank className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-800">💰 Savings Vault</h3>
-              <p className="text-sm text-gray-600">Your piggy bank: <span className="font-semibold text-purple-600">{formatCurrency(savingsVault, currency)}</span></p>
+              <h3 className="text-xl font-bold text-white">Savings Vault</h3>
+              <p className="text-indigo-100">
+                Total Saved: <span className="font-bold text-white text-lg">{formatCurrency(savingsVault, currency)}</span>
+              </p>
             </div>
           </div>
           {!showVault && (
-            <button
+            <Button
               onClick={() => setShowVault(true)}
-              className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+              variant="secondary"
+              className="bg-white/10 text-white border-white/20 hover:bg-white/20"
             >
-              Open Vault
-            </button>
+              Open Vault <Unlock className="ml-2 w-4 h-4" />
+            </Button>
           )}
         </div>
       </div>
 
       {/* Animated Vault Content */}
-      <div 
-        className={`transition-all duration-500 ease-in-out ${
-          showVault ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-        } overflow-hidden`}
+      <div
+        className={cn(
+          "transition-all duration-500 ease-in-out overflow-hidden bg-white/5 backdrop-blur-sm",
+          showVault ? 'max-h-[600px] opacity-100 border-t border-white/10' : 'max-h-0 opacity-0'
+        )}
       >
-        <div className="px-6 pb-6">
-          <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-6 rounded-xl text-white shadow-inner">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <p className="text-sm opacity-90 mb-1">Current Balance in Vault</p>
-                <p className="text-4xl font-bold">{formatCurrency(savingsVault, currency)}</p>
-              </div>
+        <div className="p-6 space-y-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-indigo-100">
+              <Lock className="w-4 h-4" />
+              <span className="text-sm font-medium">Secure Vault Access</span>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowVault(false)}
+              className="text-white hover:bg-white/10 hover:text-white"
+            >
+              Close
+            </Button>
+          </div>
+
+          <div className="bg-white/10 rounded-2xl p-6 border border-white/10">
+            <div className="flex gap-2 mb-6 bg-black/20 p-1 rounded-xl">
               <button
-                onClick={() => setShowVault(false)}
-                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
-                title="Close Vault"
+                type="button"
+                onClick={() => setMode('add')}
+                className={cn(
+                  "flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2",
+                  mode === 'add' ? 'bg-white text-indigo-600 shadow-lg' : 'text-white/70 hover:text-white hover:bg-white/5'
+                )}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <ArrowRight className="w-4 h-4" /> Deposit
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('withdraw')}
+                className={cn(
+                  "flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2",
+                  mode === 'withdraw' ? 'bg-white text-indigo-600 shadow-lg' : 'text-white/70 hover:text-white hover:bg-white/5'
+                )}
+              >
+                <ArrowLeft className="w-4 h-4" /> Withdraw
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setMode('add')}
-                  className={`flex-1 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                    mode === 'add'
-                      ? 'bg-white text-purple-600 shadow-lg scale-105'
-                      : 'bg-white/20 text-white hover:bg-white/30'
-                  }`}
-                >
-                  💵 Add Money
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMode('withdraw')}
-                  className={`flex-1 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                    mode === 'withdraw'
-                      ? 'bg-white text-purple-600 shadow-lg scale-105'
-                      : 'bg-white/20 text-white hover:bg-white/30'
-                  }`}
-                >
-                  💸 Withdraw
-                </button>
-              </div>
-
               <div>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={`Enter amount in ${currency}`}
-                  className="w-full p-4 rounded-lg text-gray-800 font-semibold text-lg focus:ring-4 focus:ring-purple-300 focus:outline-none"
-                  required
-                />
+                <label className="text-sm font-medium text-indigo-100 ml-1 mb-2 block">
+                  Amount ({currency})
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full bg-black/20 border-2 border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-black/30 transition-all font-mono text-lg"
+                    required
+                  />
+                </div>
               </div>
 
               {mode === 'add' && balance < parseFloat(amount || '0') && (
-                <div className="bg-red-500/90 border-2 border-red-300 rounded-lg p-3 animate-pulse">
-                  <p className="text-sm font-semibold">⚠️ Insufficient balance! Current balance: {formatCurrency(balance, currency)}</p>
+                <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3 flex items-center gap-3 text-red-100 text-sm">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <p>Insufficient balance. Available: {formatCurrency(balance, currency)}</p>
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading || (mode === 'add' && balance < parseFloat(amount || '0'))}
-                className="w-full bg-white text-purple-600 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-none"
+                size="lg"
+                isLoading={loading}
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  mode === 'add' ? '💰 Save to Vault' : '💸 Withdraw from Vault'
-                )}
-              </button>
+                {mode === 'add' ? 'Confirm Deposit' : 'Confirm Withdrawal'}
+              </Button>
             </form>
-
-            <div className="mt-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <p className="text-xs opacity-90 leading-relaxed">
-                💡 <strong>Tip:</strong> Money added to the vault is deducted from your balance. Use it to save for specific goals, emergencies, or future expenses. Your savings are safe here!
-              </p>
-            </div>
           </div>
+
+          <p className="text-xs text-indigo-200 text-center opacity-80">
+            Funds in the vault are separated from your main balance.
+          </p>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

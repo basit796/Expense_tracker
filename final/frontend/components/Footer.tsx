@@ -1,66 +1,72 @@
 export default function Footer() {
   const currentYear = new Date().getFullYear()
-  
+
   return (
-    <footer className="bg-gray-900 text-white mt-16">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="bg-slate-900 text-slate-300 mt-20 border-t border-slate-800">
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* About Section */}
-          <div>
-            <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              💰 Expense Tracker
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-violet-400 bg-clip-text text-transparent font-heading">
+              Expense Tracker
             </h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Your personal finance management solution. Track expenses, manage savings, and achieve your financial goals with ease.
+            <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+              Your personal finance command center. Track expenses, manage savings, and achieve your financial freedom with our premium suite of tools.
             </p>
           </div>
 
           {/* Features */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Features</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li className="flex items-center gap-2">
-                <span className="text-green-400">✓</span>
-                Multi-currency support
+            <h4 className="text-lg font-semibold text-white mb-6 font-heading">Features</h4>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-center gap-3">
+                <span className="text-primary-500">✓</span>
+                Multi-currency Support
               </li>
-              <li className="flex items-center gap-2">
-                <span className="text-green-400">✓</span>
-                Savings vault
+              <li className="flex items-center gap-3">
+                <span className="text-primary-500">✓</span>
+                Secure Savings Vault
               </li>
-              <li className="flex items-center gap-2">
-                <span className="text-green-400">✓</span>
-                Visual analytics
+              <li className="flex items-center gap-3">
+                <span className="text-primary-500">✓</span>
+                Interactive Analytics
               </li>
-              <li className="flex items-center gap-2">
-                <span className="text-green-400">✓</span>
-                Excel reports
+              <li className="flex items-center gap-3">
+                <span className="text-primary-500">✓</span>
+                Excel Export Reports
               </li>
             </ul>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h4 className="text-lg font-semibold text-white mb-6 font-heading">Quick Links</h4>
+            <ul className="space-y-3 text-sm">
               <li>
-                <a href="/dashboard" className="hover:text-white transition">Dashboard</a>
+                <a href="/dashboard" className="hover:text-primary-400 transition-colors duration-200 flex items-center gap-2">
+                  <span className="w-1 h-1 bg-slate-600 rounded-full"></span> Dashboard
+                </a>
               </li>
               <li>
-                <a href="/profile" className="hover:text-white transition">Profile</a>
+                <a href="/profile" className="hover:text-primary-400 transition-colors duration-200 flex items-center gap-2">
+                  <span className="w-1 h-1 bg-slate-600 rounded-full"></span> Profile
+                </a>
               </li>
               <li>
-                <a href="/about" className="hover:text-white transition">About</a>
+                <a href="/about" className="hover:text-primary-400 transition-colors duration-200 flex items-center gap-2">
+                  <span className="w-1 h-1 bg-slate-600 rounded-full"></span> About Us
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm">
+        <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
+          <p>
             © {currentYear} Expense Tracker. All rights reserved.
           </p>
-          <p className="text-gray-500 text-sm mt-2 md:mt-0">
-            Made with ❤️ for better financial management
+          <p className="mt-2 md:mt-0 flex items-center gap-1">
+            Made with <span className="text-red-500">❤️</span> for financial wellness
           </p>
         </div>
       </div>

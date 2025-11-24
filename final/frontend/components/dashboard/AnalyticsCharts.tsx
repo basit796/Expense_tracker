@@ -1,0 +1,117 @@
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/Card';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart as PieChartIcon, BarChart as BarChartIcon, Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+
+interface AnalyticsChartsProps {
+    report: any;
+    showCharts: boolean;
+    setShowCharts: (show: boolean) => void;
+}
+
+const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#EF4444', '#6366F1'];
+
+export default function AnalyticsCharts({ report, showCharts, setShowCharts }: AnalyticsChartsProps) {
+    const chartData = report?.categoryBreakdown || report?.category_breakdown
+        ? Object.entries(report?.categoryBreakdown || report?.category_breakdown || {}).map(([name, value]) => ({
+            name,
+            value: Number(value)
+        }))
+        : [];
+
+    const monthlyData = [
+        { name: 'Income', value: report?.totalIncome || report?.total_income || 0, fill: '#10B981' },
+        { name: 'Expense', value: report?.totalExpense || report?.total_expense || 0, fill: '#EF4444' },
+        { name: 'Savings', value: report?.savingsVault || 0, fill: '#8B5CF6' }
+    ];
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <div className="bg-primary-100 p-2 rounded-lg text-primary-600">
+                        <PieChartIcon className="w-6 h-6" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800">Analytics Overview</h2>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCharts(!showCharts)}
+                    className="gap-2"
+                >
+                    {showCharts ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showCharts ? 'Hide Charts' : 'Show Charts'}
+                </Button>
+            </div>
+
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showCharts ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Expense Breakdown */}
+                    <Card className="p-6">
+                        <h3 className="text-lg font-bold text-slate-700 mb-6 flex items-center gap-2">
+                            <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
+                            Expense Breakdown
+                        </h3>
+                        {chartData.length > 0 ? (
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={chartData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {chartData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                        />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-slate-400">
+                                No expense data available
+                            </div>
+                        )}
+                    </Card>
+
+                    {/* Income vs Expense */}
+                    <Card className="p-6">
+                        <h3 className="text-lg font-bold text-slate-700 mb-6 flex items-center gap-2">
+                            <span className="w-2 h-6 bg-success-500 rounded-full"></span>
+                            Financial Overview
+                        </h3>
+                        <div className="h-[300px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={monthlyData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                    <YAxis axisLine={false} tickLine={false} />
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                    />
+                                    <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                                        {monthlyData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        </div>
+    );
+}
