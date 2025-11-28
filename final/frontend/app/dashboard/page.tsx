@@ -211,6 +211,7 @@ export default function DashboardPage() {
           report={report}
           showCharts={showCharts}
           setShowCharts={setShowCharts}
+          username={username || ''}
         />
       </main>
 

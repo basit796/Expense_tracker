@@ -29,7 +29,7 @@ interface GoalsTrackerProps {
 export default function GoalsTracker({ username, currency, onUpdate }: GoalsTrackerProps & { onUpdate?: () => void }) {
   const [goals, setGoals] = useState<Goal[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [name, setName] = useState('')
   const [targetAmount, setTargetAmount] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -287,7 +287,7 @@ export default function GoalsTracker({ username, currency, onUpdate }: GoalsTrac
                   {contributingTo === goal.id ? (
                     <div className="flex gap-2 animate-in fade-in zoom-in duration-200">
                       <div className="relative flex-1">
-                        <DollarSign className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                        <DollarSign className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-400 z-10 pointer-events-none" />
                         <Input
                           type="number"
                           placeholder="Amount"
@@ -295,7 +295,7 @@ export default function GoalsTracker({ username, currency, onUpdate }: GoalsTrac
                           onChange={(e) => setContributeAmount(e.target.value)}
                           min="0"
                           step="0.01"
-                          className="pl-8 h-9 text-sm"
+                          className="pl-8 h-9 text-sm bg-white relative z-0"
                           autoFocus
                         />
                       </div>

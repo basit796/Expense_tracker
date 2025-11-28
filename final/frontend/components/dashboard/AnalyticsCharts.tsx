@@ -1,18 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { PieChart as PieChartIcon, BarChart as BarChartIcon, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { getGoals } from '@/lib/api';
 
 interface AnalyticsChartsProps {
     report: any;
     showCharts: boolean;
     setShowCharts: (show: boolean) => void;
+    username: string;
 }
 
 const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#EF4444', '#6366F1'];
 
-export default function AnalyticsCharts({ report, showCharts, setShowCharts }: AnalyticsChartsProps) {
+export default function AnalyticsCharts({ report, showCharts, setShowCharts, username }: AnalyticsChartsProps) {
+    const [goals, setGoals] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (username) {
+            loadGoals();
+        }
+    }, [username]);
+
+    const loadGoals = async () => {
+        try {
+            const data = await getGoals(username);
+            setGoals(data);
+        } catch (error) {
+            console.error('Failed to load goals:', error);
+        }
+    };
+
     const chartData = report?.categoryBreakdown || report?.category_breakdown
         ? Object.entries(report?.categoryBreakdown || report?.category_breakdown || {}).map(([name, value]) => ({
             name,
@@ -20,10 +39,19 @@ export default function AnalyticsCharts({ report, showCharts, setShowCharts }: A
         }))
         : [];
 
+    // Calculate total financial goals contribution
+    const totalGoalsAmount = goals.reduce((sum, goal) => sum + (goal.current_amount || 0), 0);
+
+    // Add financial goals to chart data if there are any
+    const chartDataWithGoals = totalGoalsAmount > 0 
+        ? [...chartData, { name: 'Financial Goals', value: totalGoalsAmount }]
+        : chartData;
+
     const monthlyData = [
         { name: 'Income', value: report?.totalIncome || report?.total_income || 0, fill: '#10B981' },
         { name: 'Expense', value: report?.totalExpense || report?.total_expense || 0, fill: '#EF4444' },
-        { name: 'Savings', value: report?.savingsVault || 0, fill: '#8B5CF6' }
+        { name: 'Savings', value: report?.savingsVault || 0, fill: '#8B5CF6' },
+        { name: 'Goals', value: totalGoalsAmount, fill: '#F59E0B' }
     ];
 
     return (
@@ -54,12 +82,12 @@ export default function AnalyticsCharts({ report, showCharts, setShowCharts }: A
                             <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
                             Expense Breakdown
                         </h3>
-                        {chartData.length > 0 ? (
+                        {chartDataWithGoals.length > 0 ? (
                             <div className="h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
-                                            data={chartData}
+                                            data={chartDataWithGoals}
                                             cx="50%"
                                             cy="50%"
                                             innerRadius={60}
@@ -67,7 +95,7 @@ export default function AnalyticsCharts({ report, showCharts, setShowCharts }: A
                                             paddingAngle={5}
                                             dataKey="value"
                                         >
-                                            {chartData.map((entry, index) => (
+                                            {chartDataWithGoals.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>

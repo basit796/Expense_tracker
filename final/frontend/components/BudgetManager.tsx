@@ -66,6 +66,25 @@ export default function BudgetManager({ username, categories, currency }: Budget
     }
   }
 
+  const handleDeleteBudget = async (category: string) => {
+    if (!confirm(`Are you sure you want to delete the budget for ${category}?`)) return
+
+    try {
+      // We need to find the budget ID first - for now we'll reload with a workaround
+      // Since the API expects budgetId but we only have category, we need to modify the approach
+      const budgetsData = await getBudgetStatus(username, month)
+      const budgetToDelete = budgetsData.budget_status?.find((b: Budget) => b.category === category)
+      
+      if (budgetToDelete) {
+        // Create a delete request using the category and month info
+        await deleteBudget(`${username}_${category}_${month}`)
+        await loadBudgets()
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to delete budget')
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'good': return 'bg-green-50 border-green-200'
@@ -125,7 +144,7 @@ export default function BudgetManager({ username, categories, currency }: Budget
         {isExpanded && (
           <Button
             onClick={() => setShowForm(!showForm)}
-            className="gap-2 animate-in fade-in zoom-in duration-300 bg-gradient-to-r from-primary-600 to-violet-600 hover:from-primary-700 hover:to-violet-700 shadow-md hover:shadow-lg transition-all"
+            className="w-44 gap-2 animate-in fade-in zoom-in duration-300 bg-gradient-to-r from-primary-600 to-violet-600 hover:from-primary-700 hover:to-violet-700 shadow-md hover:shadow-lg transition-all"
           >
             <Plus className="w-4 h-4" /> Add Budget
           </Button>
@@ -233,6 +252,13 @@ export default function BudgetManager({ username, categories, currency }: Budget
                       {budget.remaining < 0 && ' over'}
                     </span>
                   </p>
+                  <button
+                    onClick={() => handleDeleteBudget(budget.category)}
+                    className="text-slate-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete budget"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))
