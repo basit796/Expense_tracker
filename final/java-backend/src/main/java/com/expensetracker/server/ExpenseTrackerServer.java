@@ -3,8 +3,12 @@ package com.expensetracker.server;
 import com.expensetracker.models.User;
 import com.expensetracker.models.Transaction;
 import com.expensetracker.models.MonthlyReport;
+import com.expensetracker.models.Budget;
+import com.expensetracker.models.Goal;
 import com.expensetracker.services.UserService;
 import com.expensetracker.services.TransactionService;
+import com.expensetracker.services.BudgetService;
+import com.expensetracker.services.GoalService;
 import com.expensetracker.utils.CurrencyConverter;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -24,6 +28,8 @@ public class ExpenseTrackerServer {
     private static final Gson gson = new Gson();
     private static final UserService userService = new UserService();
     private static final TransactionService transactionService = new TransactionService();
+    private static final BudgetService budgetService = new BudgetService();
+    private static final GoalService goalService = new GoalService();
     
     public static void main(String[] args) throws IOException {
         int port = 9000;
@@ -47,6 +53,18 @@ public class ExpenseTrackerServer {
         // Report endpoints
         server.createContext("/api/java/report", new ReportHandler());
         server.createContext("/api/java/currency/rates", new RatesHandler());
+        
+        // Budget endpoints
+        server.createContext("/api/java/budgets/set", new SetBudgetHandler());
+        server.createContext("/api/java/budgets/get", new GetBudgetsHandler());
+        server.createContext("/api/java/budgets/status", new BudgetStatusHandler());
+        server.createContext("/api/java/budgets/delete", new DeleteBudgetHandler());
+        
+        // Goal endpoints
+        server.createContext("/api/java/goals/create", new CreateGoalHandler());
+        server.createContext("/api/java/goals/get", new GetGoalsHandler());
+        server.createContext("/api/java/goals/contribute", new ContributeToGoalHandler());
+        server.createContext("/api/java/goals/delete", new DeleteGoalHandler());
         
         // Health check
         server.createContext("/api/java/health", exchange -> {
@@ -372,21 +390,224 @@ public class ExpenseTrackerServer {
                 sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
                 return;
             }
-            
+
             try {
                 JsonObject json = readJsonBody(exchange);
                 String username = json.get("username").getAsString();
                 double amount = json.get("amount").getAsDouble();
-                
+
                 User user = userService.withdrawFromSavingsVault(username, amount);
-                
+
                 JsonObject response = new JsonObject();
                 response.addProperty("message", "Withdrawn from savings vault successfully");
                 response.addProperty("savingsVault", user.getSavingsVault());
-                
+
                 sendResponse(exchange, 200, gson.toJson(response));
             } catch (Exception e) {
                 sendErrorResponse(exchange, 400, e.getMessage());
+            }
+        }
+    }
+
+    // Budget Handlers
+    static class SetBudgetHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                JsonObject json = readJsonBody(exchange);
+                Budget budget = new Budget();
+                budget.setUsername(json.get("username").getAsString());
+                budget.setCategory(json.get("category").getAsString());
+                budget.setAmount(json.get("amount").getAsDouble());
+                budget.setMonth(json.get("month").getAsString());
+                budget.setCurrency(json.has("currency") ? json.get("currency").getAsString() : "PKR");
+
+                Budget created = budgetService.createBudget(budget);
+
+                JsonObject response = new JsonObject();
+                response.addProperty("message", "Budget set successfully");
+                response.addProperty("id", created.getId());
+
+                sendResponse(exchange, 200, gson.toJson(response));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 400, e.getMessage());
+            }
+        }
+    }
+
+    static class GetBudgetsHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"GET".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                String query = exchange.getRequestURI().getQuery();
+                String username = extractQueryParam(query, "username");
+                String month = extractQueryParam(query, "month");
+
+                List<Budget> budgets = budgetService.getUserBudgets(username, month);
+                sendResponse(exchange, 200, gson.toJson(budgets));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    static class BudgetStatusHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"GET".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                String query = exchange.getRequestURI().getQuery();
+                String username = extractQueryParam(query, "username");
+                String month = extractQueryParam(query, "month");
+
+                if (month == null) {
+                    month = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM"));
+                }
+
+                List<Transaction> transactions = transactionService.getUserTransactions(username);
+                Map<String, Object> status = budgetService.getBudgetStatus(username, month, transactions);
+
+                sendResponse(exchange, 200, gson.toJson(status));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    static class DeleteBudgetHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"DELETE".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                String query = exchange.getRequestURI().getQuery();
+                String id = extractQueryParam(query, "id");
+
+                boolean deleted = budgetService.deleteBudget(id);
+
+                JsonObject response = new JsonObject();
+                response.addProperty("message", deleted ? "Budget deleted successfully" : "Budget not found");
+
+                sendResponse(exchange, deleted ? 200 : 404, gson.toJson(response));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    // Goal Handlers
+    static class CreateGoalHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                JsonObject json = readJsonBody(exchange);
+                Goal goal = new Goal();
+                goal.setUsername(json.get("username").getAsString());
+                goal.setName(json.get("name").getAsString());
+                goal.setTargetAmount(json.get("target_amount").getAsDouble());
+                goal.setDeadline(json.get("deadline").getAsString());
+                goal.setCategory(json.has("category") ? json.get("category").getAsString() : "Savings");
+                goal.setCurrency(json.has("currency") ? json.get("currency").getAsString() : "PKR");
+
+                Goal created = goalService.createGoal(goal);
+
+                JsonObject response = new JsonObject();
+                response.addProperty("message", "Goal created successfully");
+                response.addProperty("id", created.getId());
+
+                sendResponse(exchange, 200, gson.toJson(response));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 400, e.getMessage());
+            }
+        }
+    }
+
+    static class GetGoalsHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"GET".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                String query = exchange.getRequestURI().getQuery();
+                String username = extractQueryParam(query, "username");
+
+                List<Map<String, Object>> goals = goalService.getUserGoals(username);
+                sendResponse(exchange, 200, gson.toJson(goals));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    static class ContributeToGoalHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                JsonObject json = readJsonBody(exchange);
+                String id = json.get("id").getAsString();
+                double amount = json.get("amount").getAsDouble();
+
+                Goal goal = goalService.contributeToGoal(id, amount);
+
+                if (goal == null) {
+                    sendErrorResponse(exchange, 404, "Goal not found");
+                    return;
+                }
+
+                JsonObject response = new JsonObject();
+                response.addProperty("message", "Contribution added successfully");
+                response.addProperty("current_amount", goal.getCurrentAmount());
+                response.addProperty("status", goal.getStatus());
+
+                sendResponse(exchange, 200, gson.toJson(response));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 400, e.getMessage());
+            }
+        }
+    }
+
+    static class DeleteGoalHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"DELETE".equals(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\":\"Method not allowed\"}");
+                return;
+            }
+
+            try {
+                String query = exchange.getRequestURI().getQuery();
+                String id = extractQueryParam(query, "id");
+
+                boolean deleted = goalService.deleteGoal(id);
+
+                JsonObject response = new JsonObject();
+                response.addProperty("message", deleted ? "Goal deleted successfully" : "Goal not found");
+
+                sendResponse(exchange, deleted ? 200 : 404, gson.toJson(response));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 500, e.getMessage());
             }
         }
     }

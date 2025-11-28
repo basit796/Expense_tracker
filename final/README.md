@@ -66,6 +66,23 @@ A modern, full-stack expense tracking application with multi-currency support, v
 - ✅ Monthly or complete export options
 - ✅ Professional spreadsheet layout
 
+### 🤖 AI-Powered Chat Assistant (NEW!)
+- ✅ Intelligent financial assistant powered by Google Gemini AI
+- ✅ Real-time answers to financial questions
+- ✅ Context-aware responses based on your transaction history
+- ✅ Spending pattern analysis and insights
+- ✅ Personalized money-saving recommendations
+- ✅ Beautiful floating chat interface
+- ✅ Message history and timestamps
+- ✅ Natural conversation flow
+
+### 💾 Savings Vault
+- ✅ Separate savings account
+- ✅ Add funds to vault
+- ✅ Withdraw from vault
+- ✅ Track savings progress
+- ✅ Visual vault display
+
 ### 🎨 User Interface
 - ✅ Modern, responsive design
 - ✅ Gradient backgrounds and smooth animations
@@ -154,6 +171,13 @@ final/
    mvn --version
    ```
 
+5. **Google Gemini API Key** (for AI chat)
+   - Get your API key from: https://ai.google.dev/
+   - Create `.env` file in `backend/` folder:
+     ```env
+     GOOGLE_API_KEY=your_api_key_here
+     ```
+
 ### 🎯 One-Click Startup
 
 **Simply run:**
@@ -234,6 +258,20 @@ DELETE /api/transactions/:id      # Delete transaction
 GET    /api/report/:username      # Get monthly report
 GET    /api/currency/rates        # Get exchange rates
 GET    /api/export/:username      # Export to Excel
+```
+
+### AI Chat (FastAPI → Gemini)
+
+```
+POST   /api/chat                  # Send message to AI assistant
+POST   /api/analyze               # Analyze expenses with AI
+```
+
+### Savings Vault (via FastAPI → Java)
+
+```
+POST   /api/savings/add           # Add to savings vault
+POST   /api/savings/withdraw      # Withdraw from vault
 ```
 
 ## 💾 Data Storage
@@ -348,15 +386,40 @@ npm install
 
 ## 📈 Future Enhancements
 
-- [ ] Budget planning and limits
+### 🎯 Top Priority Features (Ready to Implement!)
+See `FEATURE_SUGGESTIONS.md` and `IMPLEMENTATION_GUIDE.md` for detailed code.
+
+1. **📊 Budget Management System**
+   - Set monthly budgets per category
+   - Visual progress bars and alerts
+   - Budget vs actual reports
+   - **Status**: Implementation ready
+
+2. **🎯 Financial Goals Tracker**
+   - Set savings goals with deadlines
+   - Track progress visually
+   - Calculate required daily savings
+   - **Status**: Implementation ready
+
+3. **🔔 Smart Notifications**
+   - Daily spending summaries
+   - Unusual spending alerts
+   - Budget limit warnings
+   - **Status**: Implementation ready
+
+### 🚀 Additional Feature Ideas
+- [ ] Receipt scanning (OCR)
 - [ ] Recurring transactions
-- [ ] Multiple account support
-- [ ] Receipt photo upload
+- [ ] Multi-user household budgeting
 - [ ] Mobile app (React Native)
-- [ ] Real-time currency API integration
-- [ ] Data backup and restore
 - [ ] Advanced analytics dashboard
+- [ ] Debt tracking calculator
+- [ ] Gamification & achievements
+- [ ] Automated transaction categorization
+- [ ] Multi-currency real-time API
 - [ ] Expense predictions using ML
+
+📚 **See detailed implementations**: Check `FEATURE_SUGGESTIONS.md` for 15 feature ideas with complete code examples!
 
 ## 📄 License
 
@@ -382,6 +445,31 @@ Built with ❤️ using:
 ✅ Secure password handling
 ✅ RESTful API design
 ✅ Clean code architecture
+✅ **AI-powered chat assistant** (NEW!)
+✅ Savings vault system
+✅ Real-time transaction updates
+
+## 📚 Additional Documentation
+
+- 📖 **AI_CHAT_INTEGRATION.md** - Complete guide to AI chat system
+- 💡 **FEATURE_SUGGESTIONS.md** - 15 feature ideas with implementation code
+- 🚀 **IMPLEMENTATION_GUIDE.md** - Ready-to-use code for top 3 features
+- 📋 **PROJECT_SUMMARY.md** - Project overview and next steps
+- ⚡ **QUICK_START.md** - Quick setup guide
+- 💰 **SAVINGS_VAULT_IMPLEMENTATION.md** - Savings vault details
+
+## 🤖 Using the AI Chat
+
+1. Login to your dashboard
+2. Click the floating chat button (💬) in the bottom-right corner
+3. Ask questions like:
+   - "What are my top expenses?"
+   - "How much did I spend this month?"
+   - "Should I save more money?"
+   - "What are my spending patterns?"
+   - "How can I reduce my expenses?"
+
+The AI assistant analyzes your actual transaction data and provides personalized insights!
 
 ---
 

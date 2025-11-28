@@ -4,3 +4,6 @@ pydantic[email]==2.5.0
 python-multipart==0.0.6
 openpyxl==3.1.2
 httpx==0.25.2
+copilotkit==0.1.18
+google-genai
+python-dotenv==1.0.0

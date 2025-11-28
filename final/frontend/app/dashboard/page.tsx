@@ -7,10 +7,13 @@ import { getTransactions, getMonthlyReport, addTransaction, downloadExcel, delet
 import { Transaction, MonthlyReport, UserProfile } from '@/types'
 import SummaryCards from '@/components/SummaryCards'
 import SavingsVault from '@/components/SavingsVault'
+import BudgetManager from '@/components/BudgetManager'
+import GoalsTracker from '@/components/GoalsTracker'
 import Footer from '@/components/Footer'
 import TransactionForm from '@/components/dashboard/TransactionForm'
 import TransactionList from '@/components/dashboard/TransactionList'
 import AnalyticsCharts from '@/components/dashboard/AnalyticsCharts'
+import FinancialChat from '@/components/FinancialChat'
 import { Button } from '@/components/ui/Button'
 import { LogOut, User, Download, LayoutDashboard, Info } from 'lucide-react'
 
@@ -172,6 +175,19 @@ export default function DashboardPage() {
           onUpdate={() => loadData(username || '')}
         />
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <BudgetManager
+            username={username || ''}
+            categories={categories.expense}
+            currency={userProfile?.currency || 'PKR'}
+          />
+
+          <GoalsTracker
+            username={username || ''}
+            currency={userProfile?.currency || 'PKR'}
+          />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <TransactionForm
@@ -198,6 +214,8 @@ export default function DashboardPage() {
       </main>
 
       <Footer />
+      
+      {username && <FinancialChat username={username} />}
     </div>
   )
 }

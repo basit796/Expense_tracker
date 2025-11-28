@@ -143,3 +143,112 @@ export async function withdrawFromSavings(username: string, amount: number): Pro
   if (!response.ok) throw new Error(data.detail || 'Failed to withdraw from savings');
   return data;
 }
+
+export async function sendChatMessage(username: string, message: string): Promise<{ response: string; context: any }> {
+  const response = await fetch(`${API_BASE_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, message }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Chat failed');
+  return data;
+}
+
+export async function analyzeExpenses(username: string, query: string): Promise<{ analysis: string; transaction_count: number }> {
+  const response = await fetch(`${API_BASE_URL}/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, query }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Analysis failed');
+  return data;
+}
+
+// Budget Management
+export async function setBudget(username: string, category: string, amount: number, month: string, currency: string = 'PKR'): Promise<ApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/budgets/set`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, category, amount, month, currency }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Failed to set budget');
+  return data;
+}
+
+export async function getBudgets(username: string, month?: string): Promise<any[]> {
+  const url = month 
+    ? `${API_BASE_URL}/budgets/${username}?month=${month}`
+    : `${API_BASE_URL}/budgets/${username}`;
+  
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch budgets');
+  return response.json();
+}
+
+export async function getBudgetStatus(username: string, month?: string): Promise<any> {
+  const url = month 
+    ? `${API_BASE_URL}/budgets/status/${username}?month=${month}`
+    : `${API_BASE_URL}/budgets/status/${username}`;
+  
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch budget status');
+  return response.json();
+}
+
+export async function deleteBudget(budgetId: string): Promise<ApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/budgets/${budgetId}`, {
+    method: 'DELETE',
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Failed to delete budget');
+  return data;
+}
+
+// Financial Goals
+export async function createGoal(username: string, name: string, targetAmount: number, deadline: string, currency: string = 'PKR'): Promise<ApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/goals/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, name, target_amount: targetAmount, deadline, currency }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Failed to create goal');
+  return data;
+}
+
+export async function getGoals(username: string): Promise<any[]> {
+  const response = await fetch(`${API_BASE_URL}/goals/${username}`);
+  if (!response.ok) throw new Error('Failed to fetch goals');
+  return response.json();
+}
+
+export async function contributeToGoal(goalId: string, amount: number): Promise<ApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/goals/contribute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: goalId, amount }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Failed to contribute to goal');
+  return data;
+}
+
+export async function deleteGoal(goalId: string): Promise<ApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/goals/${goalId}`, {
+    method: 'DELETE',
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Failed to delete goal');
+  return data;
+}
+
