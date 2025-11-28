@@ -175,19 +175,6 @@ export default function DashboardPage() {
           onUpdate={() => loadData(username || '')}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <BudgetManager
-            username={username || ''}
-            categories={categories.expense}
-            currency={userProfile?.currency || 'PKR'}
-          />
-
-          <GoalsTracker
-            username={username || ''}
-            currency={userProfile?.currency || 'PKR'}
-          />
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <TransactionForm
@@ -206,6 +193,20 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <BudgetManager
+            username={username || ''}
+            categories={categories.expense}
+            currency={userProfile?.currency || 'PKR'}
+          />
+
+          <GoalsTracker
+            username={username || ''}
+            currency={userProfile?.currency || 'PKR'}
+            onUpdate={() => loadData(username || '')}
+          />
+        </div>
+
         <AnalyticsCharts
           report={report}
           showCharts={showCharts}
@@ -214,7 +215,7 @@ export default function DashboardPage() {
       </main>
 
       <Footer />
-      
+
       {username && <FinancialChat username={username} />}
     </div>
   )
