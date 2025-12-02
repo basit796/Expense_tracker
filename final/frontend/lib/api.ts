@@ -87,8 +87,12 @@ export async function addTransaction(transaction: Omit<Transaction, 'id' | 'crea
   return data;
 }
 
-export async function getTransactions(username: string): Promise<Transaction[]> {
-  const response = await fetch(`${API_BASE_URL}/transactions/${username}`);
+export async function getTransactions(username: string, month?: string): Promise<Transaction[]> {
+  // Get transactions for specific month if provided
+  const url = month 
+    ? `${API_BASE_URL}/transactions/${username}?month=${month}`
+    : `${API_BASE_URL}/transactions/${username}?all=true`;
+  const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch transactions');
   return response.json();
 }
@@ -242,8 +246,8 @@ export async function contributeToGoal(goalId: string, amount: number): Promise<
   return data;
 }
 
-export async function deleteGoal(goalId: string): Promise<ApiResponse> {
-  const response = await fetch(`${API_BASE_URL}/goals/${goalId}`, {
+export async function deleteGoal(goalId: string, completed: boolean = false): Promise<ApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/goals/${goalId}?completed=${completed}`, {
     method: 'DELETE',
   });
 

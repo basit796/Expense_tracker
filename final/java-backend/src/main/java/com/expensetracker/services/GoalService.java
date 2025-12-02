@@ -2,6 +2,7 @@ package com.expensetracker.services;
 
 import com.expensetracker.models.Goal;
 import com.expensetracker.models.User;
+import com.expensetracker.models.Transaction;
 import com.expensetracker.utils.JsonFileHandler;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -100,6 +101,23 @@ public class GoalService {
         if (goalOpt.isPresent()) {
             Goal goal = goalOpt.get();
             
+            // Calculate current balance from transactions
+            List<Transaction> allTransactions = transactionService.getUserTransactions(goal.getUsername());
+            double totalIncome = allTransactions.stream()
+                .filter(t -> t.getType().equals("income"))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+            double totalExpense = allTransactions.stream()
+                .filter(t -> t.getType().equals("expense"))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+            double currentBalance = totalIncome - totalExpense;
+            
+            // Check if user has sufficient balance
+            if (currentBalance < amount) {
+                throw new RuntimeException("Insufficient balance. Available: " + currentBalance);
+            }
+            
             // Get user's currency
             User user = userService.getUser(goal.getUsername());
             String userCurrency = user != null ? user.getCurrency() : "PKR";
@@ -108,7 +126,7 @@ public class GoalService {
             transactionService.addTransaction(
                 goal.getUsername(),
                 "expense",
-                "Savings", // Category for goal contributions
+                "Savings",
                 amount,
                 userCurrency,
                 "Contribution to goal: " + goal.getName(),
@@ -130,12 +148,58 @@ public class GoalService {
         return null;
     }
 
-    public boolean deleteGoal(String goalId) {
+    public Map<String, Object> deleteGoal(String goalId, boolean completed) {
         List<Goal> goals = getAllGoals();
-        boolean removed = goals.removeIf(g -> g.getId().equals(goalId));
-        if (removed) {
-            fileHandler.writeJsonObject("goals.json", gson.toJson(goals));
+        Optional<Goal> goalOpt = goals.stream()
+            .filter(g -> g.getId().equals(goalId))
+            .findFirst();
+        
+        if (!goalOpt.isPresent()) {
+            throw new RuntimeException("Goal not found");
         }
-        return removed;
+        
+        Goal goal = goalOpt.get();
+        double currentAmount = goal.getCurrentAmount();
+        double targetAmount = goal.getTargetAmount();
+        boolean isActuallyComplete = currentAmount >= targetAmount;
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("was_complete", isActuallyComplete);
+        result.put("returned_amount", 0.0);
+        
+        // If user says NOT completed and there's money, return it via income transaction
+        if (!completed && currentAmount > 0) {
+            // Get user's currency
+            User user = userService.getUser(goal.getUsername());
+            String userCurrency = user != null ? user.getCurrency() : "PKR";
+            
+            // Create income transaction to return money to balance
+            transactionService.addTransaction(
+                goal.getUsername(),
+                "income",
+                "Goal Refund",
+                currentAmount,
+                userCurrency,
+                "Refund from cancelled goal: " + goal.getName(),
+                LocalDate.now().toString()
+            );
+            
+            result.put("returned_amount", currentAmount);
+            result.put("message", "Goal cancelled. " + currentAmount + " returned to balance.");
+        } else if (completed) {
+            if (isActuallyComplete) {
+                result.put("message", "🎉 Congratulations! Goal completed and removed!");
+            } else {
+                result.put("message", "Goal marked as completed and removed.");
+            }
+        } else {
+            result.put("message", "Goal deleted.");
+        }
+        
+        // Remove goal
+        goals.removeIf(g -> g.getId().equals(goalId));
+        fileHandler.writeJsonObject("goals.json", gson.toJson(goals));
+        
+        return result;
     }
 }

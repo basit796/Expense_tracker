@@ -9,19 +9,45 @@ interface TransactionListProps {
     transactions: Transaction[];
     onDelete: (id: string) => void;
     currency: string;
+    selectedMonth?: string;
+    viewAllTime?: boolean;
+    loading?: boolean;
 }
 
-export default function TransactionList({ transactions, onDelete, currency }: TransactionListProps) {
+export default function TransactionList({ transactions, onDelete, currency, selectedMonth, viewAllTime, loading }: TransactionListProps) {
+    const monthName = viewAllTime 
+        ? 'All Time'
+        : selectedMonth 
+        ? new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        : 'All Time';
+    
     return (
         <Card className="p-6 h-full flex flex-col">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="bg-success-50 p-3 rounded-xl text-success-600">
-                    <ArrowUpRight className="w-6 h-6" />
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="bg-success-50 p-3 rounded-xl text-success-600">
+                        <ArrowUpRight className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Transactions</h2>
+                        <p className="text-sm text-slate-500">{monthName}</p>
+                    </div>
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">Recent Transactions</h2>
+                <div className="text-right">
+                    <p className="text-xs text-slate-500">Total</p>
+                    <p className="text-lg font-bold text-slate-900">{loading ? '...' : transactions.length}</p>
+                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
+            {loading ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                        <div className="w-12 h-12 mx-auto border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-slate-500 font-medium">Loading transactions...</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
                 {transactions.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-slate-400">
                         <Tag className="w-12 h-12 mb-2 opacity-20" />
@@ -70,6 +96,7 @@ export default function TransactionList({ transactions, onDelete, currency }: Tr
                     ))
                 )}
             </div>
+            )}
         </Card>
     );
 }

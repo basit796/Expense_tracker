@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables - NEVER COMMIT!
+.env
+.env.local
+.env.*.local
+
+# Service account keys - NEVER COMMIT!
+serviceAccountKey.json
+*serviceAccountKey*.json
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local data
+data/

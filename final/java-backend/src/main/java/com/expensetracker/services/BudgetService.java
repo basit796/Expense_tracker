@@ -86,6 +86,7 @@ public class BudgetService {
             }
 
             Map<String, Object> budgetInfo = new HashMap<>();
+            budgetInfo.put("budgetId", budget.getId());  // Include budgetId for deletion
             budgetInfo.put("category", budget.getCategory());
             budgetInfo.put("budget", budget.getAmount());
             budgetInfo.put("spent", spent);

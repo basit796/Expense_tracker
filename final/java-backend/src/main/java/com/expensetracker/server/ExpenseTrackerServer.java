@@ -599,13 +599,12 @@ public class ExpenseTrackerServer {
             try {
                 String query = exchange.getRequestURI().getQuery();
                 String id = extractQueryParam(query, "id");
+                String completedStr = extractQueryParam(query, "completed");
+                boolean completed = completedStr != null && completedStr.equalsIgnoreCase("true");
 
-                boolean deleted = goalService.deleteGoal(id);
+                Map<String, Object> result = goalService.deleteGoal(id, completed);
 
-                JsonObject response = new JsonObject();
-                response.addProperty("message", deleted ? "Goal deleted successfully" : "Goal not found");
-
-                sendResponse(exchange, deleted ? 200 : 404, gson.toJson(response));
+                sendResponse(exchange, 200, gson.toJson(result));
             } catch (Exception e) {
                 sendErrorResponse(exchange, 500, e.getMessage());
             }

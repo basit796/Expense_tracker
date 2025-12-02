@@ -10,11 +10,14 @@ interface AnalyticsChartsProps {
     showCharts: boolean;
     setShowCharts: (show: boolean) => void;
     username: string;
+    selectedMonth?: string;
+    viewAllTime?: boolean;
+    loading?: boolean;
 }
 
 const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#EF4444', '#6366F1'];
 
-export default function AnalyticsCharts({ report, showCharts, setShowCharts, username }: AnalyticsChartsProps) {
+export default function AnalyticsCharts({ report, showCharts, setShowCharts, username, selectedMonth, viewAllTime, loading }: AnalyticsChartsProps) {
     const [goals, setGoals] = useState<any[]>([]);
 
     useEffect(() => {
@@ -31,6 +34,12 @@ export default function AnalyticsCharts({ report, showCharts, setShowCharts, use
             console.error('Failed to load goals:', error);
         }
     };
+
+    const monthName = viewAllTime
+        ? 'All Time'
+        : selectedMonth 
+        ? new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        : 'Current Period';
 
     const chartData = report?.categoryBreakdown || report?.category_breakdown
         ? Object.entries(report?.categoryBreakdown || report?.category_breakdown || {}).map(([name, value]) => ({
@@ -61,7 +70,10 @@ export default function AnalyticsCharts({ report, showCharts, setShowCharts, use
                     <div className="bg-primary-100 p-2 rounded-lg text-primary-600">
                         <PieChartIcon className="w-6 h-6" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-800">Analytics Overview</h2>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-800">Analytics Overview</h2>
+                        <p className="text-sm text-slate-500">{monthName}</p>
+                    </div>
                 </div>
                 <Button
                     variant="outline"
@@ -75,7 +87,15 @@ export default function AnalyticsCharts({ report, showCharts, setShowCharts, use
             </div>
 
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showCharts ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="text-center space-y-4">
+                            <div className="w-12 h-12 mx-auto border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-slate-500 font-medium">Loading analytics...</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Expense Breakdown */}
                     <Card className="p-6">
                         <h3 className="text-lg font-bold text-slate-700 mb-6 flex items-center gap-2">
@@ -139,6 +159,7 @@ export default function AnalyticsCharts({ report, showCharts, setShowCharts, use
                         </div>
                     </Card>
                 </div>
+                )}
             </div>
         </div>
     );

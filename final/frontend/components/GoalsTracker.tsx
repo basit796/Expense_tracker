@@ -98,12 +98,50 @@ export default function GoalsTracker({ username, currency, onUpdate }: GoalsTrac
   }
 
   const handleDelete = async (goalId: string) => {
-    if (!confirm('Are you sure you want to delete this goal?')) return
+    // Find the goal to check if it's complete
+    const goal = goals.find(g => g.id === goalId)
+    if (!goal) return
+
+    const isComplete = goal.current_amount >= goal.target_amount
+    
+    let choice = ''
+    
+    if (isComplete) {
+      // Goal is complete - just ask if they want to delete
+      if (confirm(`🎉 Congratulations! This goal is complete!\n\nGoal: ${goal.name}\nAchieved: ${currency} ${goal.current_amount.toLocaleString()}\n\nDelete this goal?`)) {
+        choice = 'complete'
+      } else {
+        return
+      }
+    } else {
+      // Goal is incomplete - ask if completing or cancelling
+      const message = `What would you like to do with this goal?\n\n` +
+        `Goal: ${goal.name}\n` +
+        `Progress: ${currency} ${goal.current_amount.toLocaleString()} of ${currency} ${goal.target_amount.toLocaleString()}\n\n` +
+        `Click "OK" to COMPLETE (end goal, no refund)\n` +
+        `Click "Cancel" to CANCEL (get your ${currency} ${goal.current_amount.toLocaleString()} back)`
+      
+      if (confirm(message)) {
+        choice = 'complete'  // User clicked OK - mark as complete
+      } else {
+        choice = 'cancel'   // User clicked Cancel - return money
+      }
+    }
 
     setError('')
     try {
-      await deleteGoal(goalId)
+      // completed=true means "mark as done, no refund"
+      // completed=false means "cancel and refund"
+      const isCompleted = choice === 'complete'
+      await deleteGoal(goalId, isCompleted)
       await loadGoals()
+      if (onUpdate) onUpdate()  // Refresh balance
+      
+      if (choice === 'cancel' && goal.current_amount > 0) {
+        alert(`✅ Goal cancelled!\n\n${currency} ${goal.current_amount.toLocaleString()} returned to your balance.`)
+      } else if (choice === 'complete') {
+        alert('🎉 Goal completed and removed! Great job!')
+      }
     } catch (error: any) {
       console.error('Delete error:', error)
       setError(error.message || 'Failed to delete goal')

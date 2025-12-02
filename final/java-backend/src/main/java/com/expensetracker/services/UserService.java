@@ -166,4 +166,18 @@ public class UserService {
         
         return user;
     }
+    
+    public User updateSavingsVault(String username, double newAmount) {
+        List<User> users = JsonFileHandler.readList(USERS_FILE, User.class);
+        
+        User user = users.stream()
+            .filter(u -> u.getUsername().equalsIgnoreCase(username))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        user.setSavingsVault(newAmount);
+        JsonFileHandler.writeList(USERS_FILE, users);
+        
+        return user;
+    }
 }

@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/Select'
 import { AlertCircle, CheckCircle, TrendingUp, Plus, Trash2, DollarSign, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface Budget {
+  budgetId?: string  // Add budgetId for deletion
   category: string
   budget: number
   spent: number
@@ -22,22 +23,23 @@ interface BudgetManagerProps {
   username: string
   categories: string[]
   currency: string
+  selectedMonth?: string
 }
 
-export default function BudgetManager({ username, categories, currency }: BudgetManagerProps) {
+export default function BudgetManager({ username, categories, currency, selectedMonth }: BudgetManagerProps) {
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [showForm, setShowForm] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false) // Closed by default
   const [category, setCategory] = useState('')
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
-  const [month] = useState(new Date().toISOString().slice(0, 7))
+  const month = selectedMonth || new Date().toISOString().slice(0, 7)
 
   useEffect(() => {
-    if (username) {
+    if (username && month) {
       loadBudgets()
     }
-  }, [username])
+  }, [username, month])
 
   const loadBudgets = async () => {
     try {
@@ -70,15 +72,14 @@ export default function BudgetManager({ username, categories, currency }: Budget
     if (!confirm(`Are you sure you want to delete the budget for ${category}?`)) return
 
     try {
-      // We need to find the budget ID first - for now we'll reload with a workaround
-      // Since the API expects budgetId but we only have category, we need to modify the approach
-      const budgetsData = await getBudgetStatus(username, month)
-      const budgetToDelete = budgetsData.budget_status?.find((b: Budget) => b.category === category)
+      // Find the budget with the budgetId from loaded budgets
+      const budgetToDelete = budgets.find((b: Budget) => b.category === category)
       
-      if (budgetToDelete) {
-        // Create a delete request using the category and month info
-        await deleteBudget(`${username}_${category}_${month}`)
+      if (budgetToDelete && budgetToDelete.budgetId) {
+        await deleteBudget(budgetToDelete.budgetId)
         await loadBudgets()
+      } else {
+        alert('Budget ID not found')
       }
     } catch (error: any) {
       alert(error.message || 'Failed to delete budget')

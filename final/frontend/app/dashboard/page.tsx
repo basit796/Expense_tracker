@@ -15,7 +15,7 @@ import TransactionList from '@/components/dashboard/TransactionList'
 import AnalyticsCharts from '@/components/dashboard/AnalyticsCharts'
 import FinancialChat from '@/components/FinancialChat'
 import { Button } from '@/components/ui/Button'
-import { LogOut, User, Download, LayoutDashboard, Info } from 'lucide-react'
+import { LogOut, User, Download, LayoutDashboard, Info, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -24,7 +24,10 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [report, setReport] = useState<MonthlyReport | null>(null)
   const [loading, setLoading] = useState(true)
+  const [monthLoading, setMonthLoading] = useState(false)
   const [showCharts, setShowCharts] = useState(true)
+  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)) // YYYY-MM
+  const [viewAllTime, setViewAllTime] = useState(false)
 
   useEffect(() => {
     const user = localStorage.getItem('username')
@@ -36,11 +39,19 @@ export default function DashboardPage() {
     loadData(user)
   }, [router])
 
+  useEffect(() => {
+    if (username) {
+      setMonthLoading(true)
+      loadData(username).finally(() => setMonthLoading(false))
+    }
+  }, [selectedMonth, viewAllTime])
+
   const loadData = async (user: string) => {
     try {
+      const month = viewAllTime ? undefined : selectedMonth
       const [txns, rpt, profile] = await Promise.all([
-        getTransactions(user),
-        getMonthlyReport(user),
+        viewAllTime ? getTransactions(user) : getTransactions(user, month),
+        viewAllTime ? getMonthlyReport(user) : getMonthlyReport(user, month),
         getProfile(user)
       ])
       setTransactions(txns)
@@ -175,6 +186,64 @@ export default function DashboardPage() {
           onUpdate={() => loadData(username || '')}
         />
 
+        {/* Month Selector */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <h3 className="text-lg font-bold text-slate-800">Viewing Data For:</h3>
+          <div className="flex items-center gap-3">
+            <Button
+              variant={viewAllTime ? "outline" : "primary"}
+              size="sm"
+              onClick={() => setViewAllTime(!viewAllTime)}
+              className="gap-2"
+            >
+              {viewAllTime ? 'Switch to Monthly' : 'View All Time'}
+            </Button>
+            
+            {!viewAllTime && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const date = new Date(selectedMonth + '-01')
+                    date.setMonth(date.getMonth() - 1)
+                    setSelectedMonth(date.toISOString().slice(0, 7))
+                  }}
+                  className="gap-2"
+                  disabled={monthLoading}
+                >
+                  <ChevronLeft className="w-4 h-4" /> Previous
+                </Button>
+                <div className="px-4 py-2 bg-primary-50 border border-primary-200 rounded-lg min-w-[160px] text-center">
+                  {monthLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm text-primary-600">Loading...</span>
+                    </div>
+                  ) : (
+                    <span className="font-bold text-primary-700">
+                      {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const date = new Date(selectedMonth + '-01')
+                    date.setMonth(date.getMonth() + 1)
+                    setSelectedMonth(date.toISOString().slice(0, 7))
+                  }}
+                  className="gap-2"
+                  disabled={selectedMonth >= new Date().toISOString().slice(0, 7) || monthLoading}
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <TransactionForm
@@ -189,6 +258,9 @@ export default function DashboardPage() {
               transactions={transactions}
               onDelete={handleDelete}
               currency={userProfile?.currency || 'PKR'}
+              selectedMonth={selectedMonth}
+              viewAllTime={viewAllTime}
+              loading={monthLoading}
             />
           </div>
         </div>
@@ -198,6 +270,7 @@ export default function DashboardPage() {
             username={username || ''}
             categories={categories.expense}
             currency={userProfile?.currency || 'PKR'}
+            selectedMonth={selectedMonth}
           />
 
           <GoalsTracker
@@ -212,6 +285,9 @@ export default function DashboardPage() {
           showCharts={showCharts}
           setShowCharts={setShowCharts}
           username={username || ''}
+          selectedMonth={selectedMonth}
+          viewAllTime={viewAllTime}
+          loading={monthLoading}
         />
       </main>
 
