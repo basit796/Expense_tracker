@@ -67,17 +67,6 @@ wahab / 123456
 
 ---
 
-## 🔒 Security
-
-**Protected files (NEVER commit):**
-- `backend/.env` - API keys
-- `backend/serviceAccountKey.json` - Firebase credentials
-
-**Current API key:** `AIzaSyDRLXwPBdLjMRDkae-pYv3LRj_tuFT2Eec`  
-Location: `backend/.env`
-
----
-
 ## 🐛 Troubleshooting
 
 ### Can't login with old accounts?
